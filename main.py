@@ -1,34 +1,31 @@
+# Python libraries
 import random
 import math
 from operator import itemgetter
+
+# Parts of this project
+from Dot import Dot
+import convex_hull
 
 ## Constants
 pointSize = 14
 textSize = 12
 
-canvas = {
-  'width': 640,
-  'height': 640
-}
+canvas = {'width': 640, 'height': 640}
 
-## Data types
-class Dot:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def draw(self):
-        ellipse(self.x, self.y, pointSize, pointSize)
-
-class State:
-    def __init__(self):
-        self.mode = 'add' # also possible: edit, delete
-        self.help = False
-        self.dots = []
-        self.dragged = None
 
 ## Global state
+class State:
+    def __init__(self):
+        self.mode = 'add'  # also possible: edit, delete
+        self.help = False
+        self.dots = []
+        self.lines = []
+        self.dragged = None
+
+
 state = State()
+
 
 ## UI
 def render_text_information():
@@ -38,6 +35,7 @@ def render_text_information():
     if state.help:
         help()
 
+
 # Text information
 def help():
     text("""
@@ -45,8 +43,10 @@ c -- clear scene
 a -- switch to `add` mode
 e -- switch to `edit` mode
 d -- switch to `delete` mode
-r -- add 10 random points""",
-         10, 20)
+r -- add 10 random points
+j -- convex hull by gift wrapping
+""", 10, 20)
+
 
 # Setup the canvas
 def setup():
@@ -62,13 +62,18 @@ def setup():
 
     render_text_information()
 
+
 # Re-drawing
 def draw():
     background(255)
     render_text_information()
 
     for dot in state.dots:
-        dot.draw()
+        ellipse(dot.x, dot.y, pointSize, pointSize)
+
+    for a, b in state.lines:
+        line(a.x, a.y, b.x, b.y)
+
 
 # Mouse events
 def mouseClicked():
@@ -80,23 +85,28 @@ def mouseClicked():
         if dot:
             state.dots.remove(dot)
 
+
 def mousePressed():
     if state.mode == 'edit':
         state.dragged = getClickedDot()
+
 
 def mouseDragged():
     if state.dragged and state.dragged:
         state.dragged.x = mouseX
         state.dragged.y = mouseY
 
+
 def mouseReleased():
     if state.mode == 'edit':
         state.dragged = None
+
 
 # Key events
 def keyReleased():
     if key == 'c':
         del state.dots[:]
+        del state.lines[:]
 
     if key == 'a':
         state.mode = 'add'
@@ -113,13 +123,25 @@ def keyReleased():
     if key == 'r':
         addRandomDots()
 
+    if key == 'j':
+        if len(state.dots) > 3:
+            points = convex_hull.gift_wrapping(state.dots)
+            state.lines.extend(zip(points, points[1:]))
+            state.lines.append((points[-1], points[0]))
+
+
 ## Utility functions
 def closestDot(x, y):
     """
     Returns the dot closest to given coordinates and the squared distance.
     """
-    dotsAndDistances = [(dot, (dot.x - x)**2 + (dot.y - y)**2) for dot in state.dots]
-    return min(dotsAndDistances, key=itemgetter(1))
+    if len(state.dots) == 0:
+        return None, None
+
+    dots_and_distances = [(dot, (dot.x - x)**2 + (dot.y - y)**2)
+                          for dot in state.dots]
+    return min(dots_and_distances, key=itemgetter(1))
+
 
 def getClickedDot():
     """
@@ -127,11 +149,15 @@ def getClickedDot():
     If there are more such dots it returns the closest one.
     If there are none such dots it returns None.
     """
+    if len(state.dots) == 0:
+        return None
+
     dot, distanceSquared = closestDot(mouseX, mouseY)
     if distanceSquared <= (pointSize / 2)**2:
         return dot
     else:
         return None
+
 
 def addRandomDots():
     """
@@ -142,7 +168,7 @@ def addRandomDots():
     dotsAdded = 0
     attempts = 0
     while dotsAdded < 10 and attempts < 500:
-        x = random.randint(padding, canvas['width'] - pading)
+        x = random.randint(padding, canvas['width'] - padding)
         y = random.randint(padding, canvas['height'] - padding)
 
         overlaps = False
