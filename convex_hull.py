@@ -1,11 +1,13 @@
 from Dot import *
 
 
+## Gift wrapping
+
 def gift_wrapping(points):
     if len(points) <= 2:
         return []
 
-    # Find a starting point q called a pivot
+    # Find a starting point q
     q = min(points, key=lambda p: p.y)
 
     # And an auxiliary point which forms a line l with q,
@@ -46,3 +48,43 @@ def gift_wrapping(points):
 
     # Now H is a convex hull of the given points
     return H
+
+
+## Graham scan
+
+from collections import deque
+
+
+def ccw(p1, p2, p3):
+    # 0  points are colinear
+    # >0 cw
+    # <0 ccw
+    return (p2.x - p1.x)*(p3.y - p1.y) - (p2.y - p1.y)*(p3.x - p1.x)
+    
+
+def graham_scan(points):
+    if len(points) <= 2:
+        return []
+
+    # Find a starting point q
+    q = min(points, key=lambda p: (p.y, p.x))
+    
+    # Sort by angle
+    x_axis = v(Dot(1,0), Dot(0,0))    
+    s_points = sorted(points, key=lambda p: PVector.angleBetween(v(p, q), x_axis))
+    
+    # Initialize the queue
+    Q = deque()
+    Q.append(q)
+    Q.append(s_points[1])
+    
+    # Find new points
+    j = 2
+    while j < len(s_points):
+        if ccw(Q[-2], Q[-1], s_points[j]) >= 0:
+            Q.append(s_points[j])
+            j = j + 1
+        else:
+            Q.pop()            
+    
+    return list(Q)
