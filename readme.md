@@ -2,6 +2,8 @@ A project implementing the following geometric algorithms with
 visualization:
 
 * Gift wrapping algorithm for convex hull,
+* Graham scan algorithm for convex hull,
+* an algorithm for triangulating convex polygons,
 * (to be continued soon).
 
 This project uses the Processing framework with Python mode.

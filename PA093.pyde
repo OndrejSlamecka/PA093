@@ -6,6 +6,7 @@ from operator import itemgetter
 # Parts of this project
 from Dot import Dot
 import convex_hull
+import triangulation
 
 ## Constants
 pointSize = 14
@@ -20,6 +21,7 @@ class State:
         self.mode = 'add'  # also possible: edit, delete
         self.help = False
         self.dots = []
+        self.selected_dot = None
         self.lines = []
         self.dragged = None
 
@@ -46,6 +48,7 @@ d -- switch to `delete` mode
 r -- add 10 random points
 j -- convex hull by gift wrapping
 g -- convex hull by Graham scan
+t -- triangulate
 """, 10, 20)
 
 
@@ -72,19 +75,63 @@ def draw():
     for dot in state.dots:
         ellipse(dot.x, dot.y, pointSize, pointSize)
 
+    if state.selected_dot:
+        dot = state.selected_dot
+        fill(255)
+        ellipse(dot.x, dot.y, pointSize + 4, pointSize + 4)
+        fill(0)
+        ellipse(dot.x, dot.y, pointSize, pointSize)
+
     for a, b in state.lines:
         line(a.x, a.y, b.x, b.y)
 
 
 # Mouse events
 def mouseClicked():
-    if state.mode == 'add':
-        state.dots.append(Dot(mouseX, mouseY))
+    clicked_dot = getClickedDot()
 
-    if state.mode == 'delete':
-        dot = getClickedDot()
-        if dot:
-            state.dots.remove(dot)
+    if state.mode == 'add':
+        if not clicked_dot:
+            dot = Dot(mouseX, mouseY)
+            state.dots.append(dot)
+
+            if state.selected_dot:
+                state.lines.append((state.selected_dot, dot))
+                state.selected_dot = dot
+        else:
+            if not state.selected_dot:
+                state.selected_dot = clicked_dot
+            else:
+                if state.selected_dot != clicked_dot:
+                    state.lines.append((state.selected_dot, clicked_dot))
+
+                state.selected_dot = None
+
+    # the code below is awfully inefficient
+    if state.mode == 'delete' and clicked_dot:
+        # if dot is not an endpoint of any line
+        if not any([u == clicked_dot or v == clicked_dot for u,v in state.lines]):
+            state.dots.remove(clicked_dot)
+        else:
+            if not state.selected_dot:
+                state.selected_dot = clicked_dot
+            else:
+                if state.selected_dot == clicked_dot:
+                    state.selected_dot = None
+                else:
+                    uv_line = (clicked_dot, state.selected_dot) in state.lines
+                    vu_line = (state.selected_dot, clicked_dot) in state.lines
+
+                    if uv_line or vu_line:
+                        if uv_line:
+                            state.lines.remove((clicked_dot, state.selected_dot))
+
+                        if vu_line:
+                            state.lines.remove((state.selected_dot, clicked_dot))
+
+                        state.selected_dot = None
+                    else:
+                        state.selected_dot = clicked_dot
 
 
 def mousePressed():
@@ -129,12 +176,15 @@ def keyReleased():
             points = convex_hull.gift_wrapping(state.dots)
             state.lines.extend(zip(points, points[1:]))
             state.lines.append((points[-1], points[0]))
-    
+
     if key == 'g':
         if len(state.dots) > 3:
             points = convex_hull.graham_scan(state.dots)
             state.lines.extend(zip(points, points[1:]))
-            state.lines.append((points[-1], points[0]))        
+            state.lines.append((points[-1], points[0]))
+
+    if key == 't':
+        state.lines.extend(triangulation.triangulate(state.lines))
 
 
 ## Utility functions
