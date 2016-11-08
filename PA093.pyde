@@ -7,6 +7,7 @@ from operator import itemgetter
 from Dot import Dot
 import convex_hull
 import triangulation
+import kd_tree
 
 ## Constants
 pointSize = 14
@@ -43,12 +44,14 @@ def help():
     text("""
 c -- clear scene
 a -- switch to `add` mode
+     doubleclick dots to add edges
 e -- switch to `edit` mode
 d -- switch to `delete` mode
 r -- add 10 random points
 j -- convex hull by gift wrapping
 g -- convex hull by Graham scan
 t -- triangulate
+k -- compute k-d tree
 """, 10, 20)
 
 
@@ -84,6 +87,8 @@ def draw():
 
     for a, b in state.lines:
         line(a.x, a.y, b.x, b.y)
+        
+    text("x: " + str(mouseX) + " y: " + str(mouseY), mouseX + 15, mouseY + 30)
 
 
 # Mouse events
@@ -185,6 +190,11 @@ def keyReleased():
 
     if key == 't':
         state.lines.extend(triangulation.triangulate(state.lines))
+            
+    if key == 'k':        
+        root = kd_tree.build(state.dots, 0)      
+        lines = kd_tree.lines(root, 0, canvas['width'], canvas['height'], 0)
+        state.lines.extend(lines)        
 
 
 ## Utility functions
