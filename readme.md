@@ -5,9 +5,11 @@ visualization:
 * Graham scan algorithm for convex hull,
 * an algorithm for triangulating convex polygons,
 * k-d tree construction (for k = 2),
+* Delaunay triangulation,
 * (to be continued soon).
 
-This project uses the Processing framework with Python mode.
+This project uses the Processing framework with Python mode. Most
+algorithms are optimized for code length, not computational complexity.
 
 How to run
 ----------

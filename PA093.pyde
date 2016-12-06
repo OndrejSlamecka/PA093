@@ -1,13 +1,13 @@
 # Python libraries
 import random
 import math
-from operator import itemgetter
 
 # Parts of this project
-from Dot import Dot
+from Dot import *
 import convex_hull
 import triangulation
 import kd_tree
+import delaunay
 
 ## Constants
 pointSize = 14
@@ -50,7 +50,8 @@ d -- switch to `delete` mode
 r -- add 10 random points
 j -- convex hull by gift wrapping
 g -- convex hull by Graham scan
-t -- triangulate
+t -- naive triangulation
+l -- Delaunay triangulation
 k -- compute k-d tree
 """, 10, 20)
 
@@ -190,7 +191,10 @@ def keyReleased():
 
     if key == 't':
         state.lines.extend(triangulation.triangulate(state.lines))
-            
+
+    if key == 'l':
+        state.lines.extend(delaunay.triangulate(state.dots))
+                        
     if key == 'k':        
         root = kd_tree.build(state.dots, 0)      
         lines = kd_tree.lines(root, 0, canvas['width'], canvas['height'], 0)
@@ -198,18 +202,6 @@ def keyReleased():
 
 
 ## Utility functions
-def closestDot(x, y):
-    """
-    Returns the dot closest to given coordinates and the squared distance.
-    """
-    if len(state.dots) == 0:
-        return None, None
-
-    dots_and_distances = [(dot, (dot.x - x)**2 + (dot.y - y)**2)
-                          for dot in state.dots]
-    return min(dots_and_distances, key=itemgetter(1))
-
-
 def getClickedDot():
     """
     Returns the clicked dot.
@@ -219,7 +211,7 @@ def getClickedDot():
     if len(state.dots) == 0:
         return None
 
-    dot, distanceSquared = closestDot(mouseX, mouseY)
+    dot, distanceSquared = closestDot(state.dots, (mouseX, mouseY))
     if distanceSquared <= (pointSize / 2)**2:
         return dot
     else:
@@ -240,7 +232,7 @@ def addRandomDots():
 
         overlaps = False
         if len(state.dots) > 0:
-            _, distance = closestDot(x, y)
+            _, distance = closestDot(state.dots, (x, y))
             overlaps = distance <= pointSize**2
 
         if not overlaps:
