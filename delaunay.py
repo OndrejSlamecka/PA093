@@ -31,12 +31,7 @@ def dd(c, e):
     """
     a, b = e
 
-    # Compute the center s
-    # https://en.wikipedia.org/wiki/Circumscribed_circle#Cartesian_coordinates_2
-    d = 2*(a.x*(b.y - c.y) + b.x*(c.y - a.y) + c.x*(a.y - b.y))
-    sx = ((a.x**2 + a.y**2)*(b.y - c.y) + (b.x**2 + b.y**2)*(c.y - a.y) + (c.x**2 + c.y**2)*(a.y - b.y)) / d
-    sy = ((a.x**2 + a.y**2)*(c.x - b.x) + (b.x**2 + b.y**2)*(a.x - c.x) + (c.x**2 + c.y**2)*(b.x - a.x)) / d
-    s = Dot(sx, sy)
+    s = center(a, b, c)
 
     # Compute the radius r
     r = sqrt((s.x - c.x)**2 + (s.y - c.y)**2)
@@ -48,11 +43,14 @@ def dd(c, e):
 
 
 # Prerequisite: No three points should be colinear
+# Returns the edges of triangulation and a list of triangles
+# (each triangle is represented using three line segments)
 def triangulate(points):
     if not points:
         return []
 
     dt = [] # list of edges in the triangulation
+    triangles = []
     ael = AEL(dt)
 
     p1 = points[0]
@@ -73,6 +71,7 @@ def triangulate(points):
     ael.add(e)
     ael.add(e2)
     ael.add(e3)
+    triangles.append([e, e2, e3])
 
     while not ael.empty():
         e = ael.first()
@@ -93,8 +92,9 @@ def triangulate(points):
             if all(conds[1]):
                 ael.add(e3)
 
+            triangles.append([e, e2, e3])
+
         # dt.append(oe)
         ael.remove(e)
 
-    return dt
-
+    return dt, triangles

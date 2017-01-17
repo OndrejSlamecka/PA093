@@ -41,3 +41,14 @@ def closestDot(dots, p):
                           for dot in dots if dot != p]
 
     return min(dots_and_distances, key=itemgetter(1))
+
+
+# Returns the center of the circle circumscribed around the given
+# triangle
+def center(a, b, c):
+    # https://en.wikipedia.org/wiki/Circumscribed_circle#Cartesian_coordinates_2
+    d = 2*(a.x*(b.y - c.y) + b.x*(c.y - a.y) + c.x*(a.y - b.y))
+    sx = ((a.x**2 + a.y**2)*(b.y - c.y) + (b.x**2 + b.y**2)*(c.y - a.y) + (c.x**2 + c.y**2)*(a.y - b.y)) / d
+    sy = ((a.x**2 + a.y**2)*(c.x - b.x) + (b.x**2 + b.y**2)*(a.x - c.x) + (c.x**2 + c.y**2)*(b.x - a.x)) / d
+    return Dot(sx, sy)
+

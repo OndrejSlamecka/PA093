@@ -6,7 +6,7 @@ visualization:
 * an algorithm for triangulating convex polygons,
 * k-d tree construction (for k = 2),
 * Delaunay triangulation,
-* (to be continued soon).
+* Voronoi diagrams.
 
 This project uses the Processing framework with Python mode. Most
 algorithms are optimized for code length, not computational complexity.
@@ -25,4 +25,6 @@ There are two options.
 Screenshot
 ----------
 
-TODO
+<p align="center">
+  <img src="geom_alg.png">
+</p>

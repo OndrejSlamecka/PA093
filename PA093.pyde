@@ -8,6 +8,7 @@ import convex_hull
 import triangulation
 import kd_tree
 import delaunay
+import voronoi
 
 ## Constants
 pointSize = 14
@@ -52,6 +53,7 @@ j -- convex hull by gift wrapping
 g -- convex hull by Graham scan
 t -- naive triangulation
 l -- Delaunay triangulation
+v -- Voronoi diagram
 k -- compute k-d tree
 """, 10, 20)
 
@@ -88,7 +90,7 @@ def draw():
 
     for a, b in state.lines:
         line(a.x, a.y, b.x, b.y)
-        
+
     text("x: " + str(mouseX) + " y: " + str(mouseY), mouseX + 15, mouseY + 30)
 
 
@@ -193,12 +195,23 @@ def keyReleased():
         state.lines.extend(triangulation.triangulate(state.lines))
 
     if key == 'l':
-        state.lines.extend(delaunay.triangulate(state.dots))
-                        
-    if key == 'k':        
-        root = kd_tree.build(state.dots, 0)      
+        edges, triangles = delaunay.triangulate(state.dots)
+        state.lines.extend(edges)
+
+    if key == 'v':
+        # Add extra big triangle
+        d = 10000
+        extra_pts = [Dot(0, d), Dot(-d, d), Dot(d, -d)]
+        state.dots.extend(extra_pts)
+
+        _, triangles = delaunay.triangulate(state.dots)
+        edges = voronoi.diagram(triangles)
+        state.lines.extend(edges)
+
+    if key == 'k':
+        root = kd_tree.build(state.dots, 0)
         lines = kd_tree.lines(root, 0, canvas['width'], canvas['height'], 0)
-        state.lines.extend(lines)        
+        state.lines.extend(lines)
 
 
 ## Utility functions
